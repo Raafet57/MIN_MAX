@@ -33,7 +33,7 @@ No account creation. No subscription. No social features. No exercise library. O
 | WL-06 | Weight input supports +/- stepper buttons in 1.0 kg and 2.5 kg increments, plus direct numeric entry via keypad. |
 | WL-07 | Reps input is a numeric field with large touch target. Tap to enter via keypad. |
 | WL-08 | RPE selector is optional per set. Tap opens a visual scale (7-10) with color coding and descriptions. Defaults to target RPE if not explicitly set. |
-| WL-09 | Tapping the checkmark completes a set: marks it green, stores to database, triggers haptic feedback, auto-starts rest timer. |
+| WL-09 | Tapping the checkmark completes a set: marks it green, stores to database, auto-starts rest timer. (haptic feedback dropped) |
 | WL-10 | User can un-complete a set by tapping the checkmark again (toggle behavior). |
 | WL-11 | Sets are tagged by type from program data: Normal, Partial, Dropset, Myorep. Displayed as a badge on the set row. |
 | WL-12 | User can add free-text notes to any individual set (e.g. "grip failed on rep 7"). |
@@ -66,7 +66,7 @@ No account creation. No subscription. No social features. No exercise library. O
 | RT-03 | Timer displays as a floating overlay at the bottom of the screen, always visible regardless of scroll position. |
 | RT-04 | Timer shows: countdown in large digits, circular progress animation, exercise name. |
 | RT-05 | Controls: pause/resume, +30s, -30s, skip/dismiss. |
-| RT-06 | When timer reaches 0: haptic burst, optional sound alert, visual pulse animation. |
+| RT-06 | When timer reaches 0: optional sound alert + visual pulse animation + "GO" flash (no haptic). |
 | RT-07 | Timer continues running if user navigates between exercises (scroll) — it does NOT reset. |
 | RT-08 | Timer survives app backgrounding (local notification fires at completion). |
 | RT-09 | Collapsed state shows a compact bar: "REST 1:42" with tap to expand to full controls. |
@@ -90,7 +90,7 @@ No account creation. No subscription. No social features. No exercise library. O
 |----|-------------|
 | PRR-01 | PR detection runs on workout completion for every completed set. |
 | PRR-02 | PR types tracked: highest weight at target reps, most reps at a given weight, highest single-session exercise volume, highest estimated 1RM (Epley formula). |
-| PRR-03 | New PRs trigger haptic feedback (Heavy impact) + gold visual flash on the workout summary. |
+| PRR-03 | New PRs are surfaced via gold visual flash + trophy icon on the workout summary. (haptic dropped) |
 | PRR-04 | PR board accessible in Progress tab: lists every exercise with current record per PR type + date achieved. |
 | PRR-05 | PR history per exercise: full list of previous PRs with dates and workout links. |
 
@@ -122,12 +122,12 @@ No account creation. No subscription. No social features. No exercise library. O
 | ID | Requirement |
 |----|-------------|
 | BM-01 | Dedicated Body tab for tracking body measurements. |
-| BM-02 | Input fields: date (default today), weight (kg, one decimal), body fat % (optional), skeletal muscle mass (optional, kg), waist circumference (optional, cm), notes. |
+| BM-02 | Input fields: date (default today), weight (kg, one decimal), skeletal muscle mass (optional, kg), waist circumference (optional, cm), notes. (body-fat field dropped) |
 | BM-03 | One entry per day maximum. Editing same day overwrites previous entry. |
 | BM-04 | Body weight line chart: 30/60/90 day toggles, with 7-day moving average overlay. |
 | BM-05 | Goal weight horizontal dashed line at 72 kg on body weight chart. |
 | BM-06 | Stats summary: starting weight, current weight, goal weight, total change, average weekly change. |
-| BM-07 | Body composition chart: bf% and SMM trend lines if data exists. |
+| BM-07 | Body composition chart: SMM trend if data exists. (bf% dropped) |
 
 ### 2.10 Settings
 
@@ -279,31 +279,42 @@ Base phase structure PLUS these additions:
 
 ## 6. Acceptance Criteria
 
-### MVP Launch (Phase 1 + 2 complete)
+### Explicit cuts from the original spec
 
-- [ ] User can set program start date and see correct current week/phase
-- [ ] User can start a workout and see all exercises with correct sets for current week
-- [ ] User can log weight, reps, and RPE for every set
-- [ ] Previous session values appear as ghost text on every set row
-- [ ] Rest timer auto-starts on set completion with correct per-exercise duration
-- [ ] Rest timer works as floating overlay, survives scrolling, has pause/skip/adjust controls
-- [ ] On workout finish, progression runs correctly: weight increases when reps hit, reverts on failure, freezes on deload
-- [ ] Workout summary shows duration, volume, progression changes, and PRs
-- [ ] Session notes and feeling rating can be logged
-- [ ] Per-set notes can be added
-- [ ] Exercise substitutions can be logged
-- [ ] History tab shows all past workouts with full set-by-set detail
-- [ ] Body tab accepts and stores weight, bf%, SMM, waist measurements
-- [ ] All data persists across app restarts (SQLite)
-- [ ] Mid-workout crash recovery works (auto-save on every set completion)
+- **Haptic feedback** (all of it) — set completion / PR / timer events use visual-only cues.
+- **Body-fat % tracking** — removed from `body_metrics` schema and Body tab UI. Weight, SMM, waist remain.
 
-### Full Launch (All phases)
+### MVP Launch (Phase 1 + 2 complete) — Shipped
 
-- [ ] Progress charts render correctly for every exercise
-- [ ] PR detection works for all four PR types
-- [ ] Weekly volume chart accurately reflects logged data
-- [ ] Body weight chart shows trend with moving average
-- [ ] Plate calculator returns correct plate loading
-- [ ] Export produces valid JSON and CSV files
-- [ ] Haptic feedback fires on set completion, PR, and timer events
-- [ ] Calendar view shows training day distribution
+- [x] User can set program start date and see correct current week/phase
+- [x] User can start a workout and see all exercises with correct sets for current week
+- [x] User can log weight, reps, and RPE for every set
+- [x] Previous session values appear as ghost text on every set row
+- [x] Rest timer auto-starts on set completion with correct per-exercise duration
+- [x] Rest timer works as floating overlay, survives scrolling, has pause/skip/adjust controls
+- [x] On workout finish, progression runs correctly: weight increases when reps hit, reverts on failure, freezes on deload
+- [x] Workout summary shows duration, volume, progression changes, and PRs
+- [x] Session notes and feeling rating can be logged
+- [x] Per-set notes can be added
+- [x] Exercise substitutions can be logged
+- [x] History tab shows all past workouts with full set-by-set detail
+- [x] Body tab accepts and stores weight, SMM, waist measurements (bf% explicitly dropped)
+- [x] All data persists across app restarts (SQLite)
+- [x] Mid-workout crash recovery works (auto-save on every set completion)
+
+### Full Launch (All phases) — Shipped
+
+- [x] Progress charts render correctly for every exercise
+- [x] PR detection works for all four PR types (weight, reps, volume, e1RM)
+- [x] Weekly volume chart accurately reflects logged data
+- [x] Body weight chart shows trend with moving average and goal line
+- [x] Plate calculator returns correct plate loading (visual barbell breakdown)
+- [x] Export produces valid JSON and CSV files (opens native share sheet)
+- [ ] Haptic feedback fires on set completion, PR, and timer events — **dropped from spec**
+- [x] Calendar view shows training day distribution
+
+### Post-launch verification checklist
+
+- [ ] Real-device TestFlight build smoke-tests OK (Expo Go passing ≠ signed build passing)
+- [ ] Background rest-timer notification fires on iOS with app backgrounded
+- [ ] Mid-workout force-quit → reopen → session restored with logged sets intact

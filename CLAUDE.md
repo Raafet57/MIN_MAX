@@ -8,17 +8,22 @@ Design philosophy: inspired by Hevy's speed and social polish, Strong's minimali
 
 ## Tech Stack
 
-- **Framework:** React Native (Expo)
+- **Framework:** Expo SDK 55 / React Native 0.83 / React 19 (new architecture enabled)
 - **Language:** TypeScript
 - **Local Storage:** SQLite via expo-sqlite (offline-first, no cloud dependency)
-- **State Management:** Zustand
-- **Navigation:** Expo Router (file-based)
-- **Styling:** NativeWind (Tailwind for RN)
-- **Charts:** victory-native for progress graphs
-- **Haptics:** expo-haptics (set completion, PR, timer done)
-- **Notifications:** expo-notifications (rest timer background alerts)
+- **State Management:** Zustand v5
+- **Navigation:** Expo Router v5 (file-based, typed routes)
+- **Styling:** NativeWind v4 (Tailwind for RN)
+- **Charts:** hand-rolled `react-native-svg` — victory-native was dropped to avoid React-19 peer conflicts and keep the bundle small
+- **Notifications:** expo-notifications (rest timer background alerts — local only, no push)
+- **File I/O:** expo-file-system, expo-sharing, expo-document-picker (JSON/CSV export + body-weight CSV import via share sheet)
 - **Icons:** lucide-react-native
 - **Date Handling:** date-fns
+
+### Explicitly dropped from the original spec
+
+- **Haptics** (expo-haptics) — set completion / PR / timer events use visual-only feedback.
+- **Body-fat % tracking** — `body_metrics` table has no `body_fat` column; Body tab UI has no bf% input. Weight, skeletal muscle mass, and waist are still tracked.
 
 ## Project Structure
 
@@ -241,7 +246,6 @@ interface BodyMetric {
   id: string;
   date: string;                    // ISO date (one entry per day max)
   weight?: number;                 // kg
-  bodyFat?: number;                // percentage
   skeletalMuscleMass?: number;     // kg
   waist?: number;                  // cm
   notes?: string;
@@ -377,12 +381,11 @@ CREATE TABLE personal_records (
 );
 CREATE INDEX idx_prs_exercise ON personal_records(exercise_id);
 
--- Body metrics (one row per date)
+-- Body metrics (one row per date) — note: body_fat column deliberately omitted
 CREATE TABLE body_metrics (
   id TEXT PRIMARY KEY,
   date TEXT NOT NULL UNIQUE,
   weight REAL,
-  body_fat REAL,
   skeletal_muscle_mass REAL,
   waist REAL,
   notes TEXT,
@@ -711,58 +714,58 @@ Session Feeling:
   5 🔥:               #E94560
 ```
 
-## Development Phases
+## Development Phases — Status
 
-### Phase 1: Core MVP (Build First)
-- [ ] Expo project setup with TypeScript, NativeWind, Expo Router
-- [ ] SQLite database setup with full schema + migrations
-- [ ] Hardcoded program data: all 12 weeks, 4 days, all exercises with metadata
-- [ ] Settings screen with program start date and weight unit
-- [ ] Dashboard with next workout detection (day cycling logic)
-- [ ] Active workout screen: exercise cards, set rows, weight/rep input
-- [ ] Previous session ghost values pre-filled on each set row
-- [ ] Set completion with checkmark (marks set, stores to DB)
-- [ ] Rest timer: auto-start on set complete, floating overlay, countdown, haptic on done
-- [ ] Progression logic: runs on workout finish, updates exercise_state table
-- [ ] Workout summary modal: duration, volume, progression changes
-- [ ] Basic workout history list (reverse chronological)
+### Phase 1: Core MVP — Shipped
+- [x] Expo project setup with TypeScript, NativeWind, Expo Router
+- [x] SQLite database setup with full schema + migrations
+- [x] Hardcoded program data: all 12 weeks, 4 days, 27 exercises with metadata
+- [x] Settings screen with program start date and weight unit
+- [x] Dashboard with next workout detection (day cycling logic)
+- [x] Active workout screen: exercise cards, set rows, weight/rep input
+- [x] Previous session ghost values pre-filled on each set row
+- [x] Set completion with checkmark (marks set, stores to DB)
+- [x] Rest timer: auto-start on set complete, floating overlay, countdown (haptic replaced with visual pulse — haptics dropped)
+- [x] Progression logic: runs on workout finish, updates exercise_state table
+- [x] Workout summary modal: duration, volume, progression changes
+- [x] Basic workout history list (reverse chronological)
 
-### Phase 2: Full Tracking
-- [ ] Per-set notes (free text on any set)
-- [ ] Per-session notes + feeling rating (1-5)
-- [ ] Exercise substitution logging
-- [ ] Warmup set logging (separate from working sets)
-- [ ] RPE selector component (visual, color-coded, tap to select)
-- [ ] Workout detail view in history (tap to see all sets)
-- [ ] Edit logged sets retroactively
-- [ ] Delete workout with confirmation
-- [ ] Body metrics tab: weight, bf%, SMM, waist input and storage
-- [ ] Auto-save mid-workout (crash recovery)
+### Phase 2: Full Tracking — Shipped
+- [x] Per-set notes (free text on any set)
+- [x] Per-session notes + feeling rating (1-5)
+- [x] Exercise substitution logging
+- [x] Warmup set logging (separate from working sets)
+- [x] RPE selector component (visual, color-coded, tap to select)
+- [x] Workout detail view in history (tap to see all sets)
+- [x] Edit logged sets retroactively
+- [x] Delete workout with confirmation
+- [x] Body metrics tab: weight, SMM, waist (bf% explicitly dropped)
+- [x] Auto-save mid-workout (crash recovery via SQLite write-through store)
 
-### Phase 3: Analytics & Progress
-- [ ] Per-exercise weight-over-time chart
-- [ ] Estimated 1RM trend chart (Epley)
-- [ ] PR detection on workout complete (weight, reps, volume, e1RM)
-- [ ] PR celebration: haptic + gold flash + workout summary callout
-- [ ] PR board: all exercises with current records
-- [ ] Weekly volume chart by muscle group (stacked bar)
-- [ ] Muscle group breakdown with recommended range indicators
-- [ ] Body weight chart with 7-day moving average + goal line
-- [ ] Body composition chart (bf% + SMM over time)
-- [ ] Calendar view in history tab
+### Phase 3: Analytics & Progress — Shipped
+- [x] Per-exercise weight-over-time chart
+- [x] Estimated 1RM trend chart (Epley)
+- [x] PR detection on workout complete (weight, reps, volume, e1RM)
+- [x] PR celebration: gold flash + summary callout (no haptic)
+- [x] PR board: all exercises with current records
+- [x] Weekly volume chart by muscle group (stacked bar)
+- [x] Muscle group breakdown with recommended range indicators
+- [x] Body weight chart with 7-day moving average + goal line
+- [ ] Body composition chart (SMM over time) — out of scope, bf% was dropped
+- [x] Calendar view in history tab
 
-### Phase 4: Polish & Extras
-- [ ] Weight +/- stepper buttons on set rows (1.0 kg and 2.5 kg increments)
-- [ ] Plate calculator: input target weight → shows plates per side
-- [ ] Haptic feedback: medium on set complete, heavy on PR, light on timer
-- [ ] Exercise detail screen: full history, all PRs, charts for that exercise
-- [ ] Export to JSON (full database dump)
-- [ ] Export to CSV (workout history, body metrics)
-- [ ] Import body weight from CSV
-- [ ] Workout duration tracking (auto from start to finish)
-- [ ] Phase transition notifications ("Week 7: Deload week starts")
-- [ ] Program completion screen at end of Week 12
-- [ ] Swipe-to-skip on set rows
+### Phase 4: Polish & Extras — Mostly shipped
+- [x] Weight +/- stepper buttons on set rows
+- [x] Plate calculator: input target weight → visual plate breakdown
+- [ ] Haptic feedback — explicitly dropped
+- [ ] Exercise detail screen — deferred (per-exercise data is visible in Progress tab picker)
+- [x] Export to JSON (via share sheet)
+- [x] Export to CSV (workout history, via share sheet)
+- [x] Import body weight from CSV (via document picker)
+- [x] Workout duration tracking (auto from start to finish)
+- [ ] Phase transition notifications — deferred
+- [ ] Program completion screen — basic empty state shown on dashboard when week > 12
+- [ ] Swipe-to-skip on set rows — deferred
 
 ### Phase 5: Future (Post-Launch)
 - [ ] Garmin Connect sync for daily body weight
@@ -790,7 +793,7 @@ Session Feeling:
 - Zustand stores for runtime state; SQLite for persistence. Stores hydrate from DB on app launch.
 - All weights stored in kg internally. `formatters.ts` handles display conversion.
 - All dates stored as ISO 8601 strings. Use `date-fns` for manipulation.
-- Use `expo-haptics` ImpactFeedbackStyle: `Medium` for set completion, `Heavy` for PR, `Light` for timer events
+- No haptic feedback anywhere — user dropped it from the spec; set completion / PR / timer events use visual-only cues.
 - Rest timer state lives in `workoutStore` Zustand store — survives screen navigation
 - No `console.log` in committed code. Use `__DEV__` flag for debug logging.
 - Component files use PascalCase. Utility files use camelCase. Constants use camelCase.

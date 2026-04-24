@@ -1,5 +1,7 @@
 # DESIGN.md — MinMax Tracker
 
+> **Implementation note (2026-04-24):** Haptic feedback described throughout this doc was **not implemented** — the spec dropped it. Anywhere this file says "haptic burst" / "Medium impact" / "Heavy haptic", read it as "visual-only cue" (gold flash, background pulse, "GO" text flash). Everything else in this design is faithfully built.
+
 ## Design Philosophy
 
 MinMax Tracker is built dark-first. Not dark-as-afterthought — dark as the primary design surface. The gym is a low-light, high-focus environment. The screen should feel like an instrument panel: high contrast where it matters, receding into black where it doesn't. Every pixel either communicates data or gets out of the way.
